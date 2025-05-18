@@ -1,11 +1,14 @@
-package com.demo.simplecryptotrader.entities;
+package com.demo.simplecryptotrader.model;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 import static jakarta.persistence.GenerationType.IDENTITY;
 
@@ -21,5 +24,5 @@ public class Wallet {
     private Long userId;
     private String currency;
     private BigDecimal balance;
-    private Timestamp timestamp;
+    private LocalDateTime timestamp;
 }

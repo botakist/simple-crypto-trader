@@ -1,7 +1,9 @@
 package com.demo.simplecryptotrader.repository;
 
-import com.demo.simplecryptotrader.entities.Trade;
+import com.demo.simplecryptotrader.model.Trade;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
+@Repository
 public interface TradeRepository extends JpaRepository<Trade, Long> {
 }

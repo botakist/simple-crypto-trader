@@ -1,5 +1,4 @@
-package com.demo.simplecryptotrader.entities;
-
+package com.demo.simplecryptotrader.model;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -8,15 +7,23 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
 import static jakarta.persistence.GenerationType.IDENTITY;
 
 @Entity
 @Getter
 @Setter
-@Table(name = "users")
-public class User {
+@Table(name = "prices")
+public class Price {
     @Id
     @GeneratedValue(strategy = IDENTITY)
     private Long id;
-    private String username;
+    private String pair;
+    private BigDecimal bidPrice;
+    private String bidSource;
+    private BigDecimal askPrice;
+    private String askSource;
+    private LocalDateTime timestamp;
 }
