@@ -16,11 +16,13 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -61,6 +63,7 @@ public class TraderServiceImpl implements TraderService {
                 .bodyToMono(HuobiResponse.class);
 
         Mono.zip(binanceMono, huobiMono)
+                .publishOn(Schedulers.boundedElastic())
                 .doOnNext(tuple -> {
                     Map<String, BinanceTicker> binanceTickerMap = tuple.getT1().stream()
                             .filter(t -> TARGET_PAIRS.contains(t.getSymbol()))
@@ -126,8 +129,8 @@ public class TraderServiceImpl implements TraderService {
                             askSource = SOURCE_HUOBI;
                         }
 
-                        // log.info("[{}] Best Bid: {} ({})", pair, bidPrice, bidSource);
-                        // log.info("[{}] Best Ask: {} ({})", pair, askPrice, askSource);
+                        log.info("[{}] Best Bid: {} ({})", pair, bidPrice, bidSource);
+                        log.info("[{}] Best Ask: {} ({})", pair, askPrice, askSource);
 
                         Price p = new Price();
                         p.setPair(pair);
@@ -141,5 +144,10 @@ public class TraderServiceImpl implements TraderService {
                 })
                 .doOnError(error -> log.error("Error: ", error))
                 .subscribe();
+    }
+
+    @Override
+    public Optional<Map<String, Object>> retrieveLatestBestPrice() {
+        return Optional.ofNullable(priceRepository.getLatestRecord());
     }
 }
