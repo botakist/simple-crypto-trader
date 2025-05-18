@@ -8,7 +8,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 import static jakarta.persistence.GenerationType.IDENTITY;
 
@@ -21,10 +21,10 @@ public class Trade {
     @GeneratedValue(strategy = IDENTITY)
     private Long id;
     private Long userId;
-    private String pair;
-    private String type;
-    private BigDecimal amt;
+    private String symbol;
+    private String side;
+    private BigDecimal qty;
     private BigDecimal price;
-    private BigDecimal total;
-    private LocalDateTime timestamp;
+    private String exchange;
+    private Instant timestamp;
 }

@@ -16,23 +16,25 @@ import java.util.Map;
 
 @Repository
 public class PriceRepositoryImpl implements PriceRepositoryCustom {
-    private static final List<String> TARGET_PAIRS = List.of("BTCUSDT", "ETHUSDT");
+
     @PersistenceContext
     private EntityManager entityManager;
 
     @Override
-    public Map<String, Object> getLatestRecord() {
+    public Map<String, Object> getLatestBestAggPrice(List<String> pairs) {
         Map<String, Object> result = new HashMap<>();
 
-        for (String pair : TARGET_PAIRS) {
+        for (String pair : pairs) {
             CriteriaBuilder cb = entityManager.getCriteriaBuilder();
             CriteriaQuery<Tuple> query = cb.createTupleQuery();
             Root<Price> root = query.from(Price.class);
 
             query.multiselect(
                     root.get("bidPrice").alias("bidPrice"),
+                    root.get("bidQty").alias("bidQty"),
                     root.get("bidSource").alias("bidSource"),
                     root.get("askPrice").alias("askPrice"),
+                    root.get("askQty").alias("askQty"),
                     root.get("askSource").alias("askSource"),
                     root.get("timestamp").alias("timestamp")
             );
@@ -48,8 +50,10 @@ public class PriceRepositoryImpl implements PriceRepositoryCustom {
                 Tuple t = tupleList.get(0);
                 Map<String, Object> data = new HashMap<>();
                 data.put("bidPrice", t.get("bidPrice"));
+                data.put("bidQty", t.get("bidQty"));
                 data.put("bidSource", t.get("bidSource"));
                 data.put("askPrice", t.get("askPrice"));
+                data.put("askQty", t.get("askQty"));
                 data.put("askSource", t.get("askSource"));
                 data.put("timestamp", t.get("timestamp"));
                 result.put(pair, data);

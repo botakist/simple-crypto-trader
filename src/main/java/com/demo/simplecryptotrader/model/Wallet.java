@@ -8,7 +8,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 import static jakarta.persistence.GenerationType.IDENTITY;
 
@@ -24,5 +24,5 @@ public class Wallet {
     private Long userId;
     private String currency;
     private BigDecimal balance;
-    private LocalDateTime timestamp;
+    private Instant timestamp;
 }

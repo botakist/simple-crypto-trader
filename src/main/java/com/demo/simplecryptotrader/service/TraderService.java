@@ -1,10 +1,14 @@
 package com.demo.simplecryptotrader.service;
 
+import org.springframework.http.ResponseEntity;
+
+import java.math.BigDecimal;
+import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 public interface TraderService {
 
     void retrievePrice();
-    Optional<Map<String, Object>> retrieveLatestBestPrice();
+    Map<String, Object> retrieveLatestBestPrice(List<String> pairs);
+    ResponseEntity<Object> buyWithLatestBestAggPrice(String symbol, Long userId, BigDecimal price);
 }
