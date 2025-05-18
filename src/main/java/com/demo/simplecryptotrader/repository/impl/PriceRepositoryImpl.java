@@ -21,10 +21,10 @@ public class PriceRepositoryImpl implements PriceRepositoryCustom {
     private EntityManager entityManager;
 
     @Override
-    public Map<String, Object> getLatestBestAggPrice(List<String> pairs) {
+    public Map<String, Object> getLatestBestAggPrice(List<String> symbols) {
         Map<String, Object> result = new HashMap<>();
 
-        for (String pair : pairs) {
+        for (String pair : symbols) {
             CriteriaBuilder cb = entityManager.getCriteriaBuilder();
             CriteriaQuery<Tuple> query = cb.createTupleQuery();
             Root<Price> root = query.from(Price.class);

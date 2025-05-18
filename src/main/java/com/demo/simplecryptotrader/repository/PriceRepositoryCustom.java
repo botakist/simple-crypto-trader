@@ -4,5 +4,5 @@ import java.util.List;
 import java.util.Map;
 
 public interface PriceRepositoryCustom {
-    Map<String, Object> getLatestBestAggPrice(List<String> pairs);
+    Map<String, Object> getLatestBestAggPrice(List<String> symbols);
 }

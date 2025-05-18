@@ -1,9 +1,10 @@
 package com.demo.simplecryptotrader.service.impl;
 
+import com.demo.simplecryptotrader.exception.InsufficientWalletBalanceException;
+import com.demo.simplecryptotrader.exception.UserIdDoesNotExistException;
 import com.demo.simplecryptotrader.model.*;
 import com.demo.simplecryptotrader.repository.PriceRepository;
 import com.demo.simplecryptotrader.repository.TradeRepository;
-import com.demo.simplecryptotrader.repository.UserRepository;
 import com.demo.simplecryptotrader.repository.WalletRepository;
 import com.demo.simplecryptotrader.service.TraderService;
 import jakarta.transaction.Transactional;
@@ -15,6 +16,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.PagedModel;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -24,6 +26,7 @@ import reactor.core.scheduler.Schedulers;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.text.MessageFormat;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
@@ -38,7 +41,6 @@ public class TraderServiceImpl implements TraderService {
 
     private final PriceRepository priceRepository;
     private final TradeRepository tradeRepository;
-    private final UserRepository userRepository;
     private final WalletRepository walletRepository;
     private final WebClient webClient;
 
@@ -166,29 +168,34 @@ public class TraderServiceImpl implements TraderService {
     }
 
     @Override
-    public Map<String, Object> retrieveLatestBestPrice(List<String> pairs) {
-        return priceRepository.getLatestBestAggPrice(pairs);
+    public Map<String, Object> retrieveLatestBestPrice(List<String> symbols) {
+        return priceRepository.getLatestBestAggPrice(symbols);
     }
 
     @Transactional
     @Override
-    public ResponseEntity<Object> buyWithLatestBestAggPrice(String symbol, Long userId, BigDecimal price) {
+    public ResponseEntity<Object> buyWithLatestBestAggPrice(TradeRequest tradeRequest) {
         // check wallet ensure enough balance
-        Wallet currentUserWallet = walletRepository.findByUserId(userId);
-        if (currentUserWallet.getBalance().subtract(price).compareTo(BigDecimal.ZERO) < 0) {
-            return ResponseEntity.badRequest().body("insufficient wallet balance");
+        Wallet currentUserWallet = walletRepository.findByUserId(tradeRequest.getUserId());
+        if (currentUserWallet == null) {
+            String errMessage = MessageFormat.format("user id {0} does not exist", tradeRequest.getUserId());
+            log.info(errMessage);
+            throw new UserIdDoesNotExistException(errMessage);
+        }
+        if (currentUserWallet.getBalance().subtract(tradeRequest.getPrice()).compareTo(BigDecimal.ZERO) < 0) {
+            throw new InsufficientWalletBalanceException("insufficient wallet balance.");
         }
 
         // retrieve latest ask price for the specific pair (BTCUSDT or ETHUSDT)
-        Map<String, Object> result = priceRepository.getLatestBestAggPrice(Arrays.asList(symbol));
-        Map<String, Object> symbolData = (Map<String, Object>) result.get(symbol);
+        Map<String, Object> result = priceRepository.getLatestBestAggPrice(Arrays.asList(tradeRequest.getSymbol()));
+        Map<String, Object> symbolData = (Map<String, Object>) result.get(tradeRequest.getSymbol());
 
         BigDecimal exchangeAskPrice = (BigDecimal) symbolData.get("askPrice");
         BigDecimal exchangeAskSize = (BigDecimal) symbolData.get("askQty");
         String exchange = (String) symbolData.get("askSource");
 
         // set rounding down based on Binance's asset precision
-        BigDecimal calculatedAskSizeBasedOnExchangeAskPrice = price.divide(exchangeAskPrice, 8, RoundingMode.DOWN);
+        BigDecimal calculatedAskSizeBasedOnExchangeAskPrice = tradeRequest.getPrice().divide(exchangeAskPrice, 8, RoundingMode.DOWN);
 
         BigDecimal maxAskSize = calculatedAskSizeBasedOnExchangeAskPrice;
         if (calculatedAskSizeBasedOnExchangeAskPrice.compareTo(exchangeAskSize) > 0) {
@@ -196,8 +203,8 @@ public class TraderServiceImpl implements TraderService {
         }
 
         Trade t = new Trade();
-        t.setUserId(userId);
-        t.setSymbol(symbol);
+        t.setUserId(tradeRequest.getUserId());
+        t.setSymbol(tradeRequest.getSymbol());
         t.setSide("BUY");
         t.setQty(maxAskSize);
         t.setPrice(exchangeAskPrice); // price at which the trade occurred
@@ -206,10 +213,30 @@ public class TraderServiceImpl implements TraderService {
         tradeRepository.save(t);
 
         // deduct balance for wallet
-        currentUserWallet.setBalance(currentUserWallet.getBalance().subtract(price));
+        currentUserWallet.setBalance(currentUserWallet.getBalance().subtract(tradeRequest.getPrice()));
         walletRepository.save(currentUserWallet);
 
-        return ResponseEntity.ok("Trade performed successfully");
+        Map<String, Object> response = Map.of(
+                "status", HttpStatus.OK.value(),
+                "message", "Trade performed successfully",
+                "timestamp", Instant.now().toString()
+        );
+
+        return ResponseEntity.ok(response);
+    }
+
+    @Override
+    public WalletBalanceResponse retrieveWalletBalance(Long userId) {
+        Wallet wallet = walletRepository.findByUserId(userId);
+        if (wallet == null) {
+            String errMessage = MessageFormat.format("user id {0} does not exist", userId);
+            log.info(errMessage);
+            throw new UserIdDoesNotExistException(errMessage);
+        }
+        WalletBalanceResponse response = new WalletBalanceResponse();
+        response.setCurrency(wallet.getCurrency());
+        response.setBalance(wallet.getBalance());
+        return response;
     }
 
     @Override
