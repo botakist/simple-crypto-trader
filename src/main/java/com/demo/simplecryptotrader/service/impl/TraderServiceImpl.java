@@ -10,6 +10,11 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PagedResourcesAssembler;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.PagedModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -36,6 +41,8 @@ public class TraderServiceImpl implements TraderService {
     private final UserRepository userRepository;
     private final WalletRepository walletRepository;
     private final WebClient webClient;
+
+    private final PagedResourcesAssembler<Trade> pagedResourcesAssembler;
 
     @Value("${binance.ticker.url}")
     private String binanceTickerUrl;
@@ -203,5 +210,11 @@ public class TraderServiceImpl implements TraderService {
         walletRepository.save(currentUserWallet);
 
         return ResponseEntity.ok("Trade performed successfully");
+    }
+
+    @Override
+    public PagedModel<EntityModel<Trade>> retrieveTrades(Long userId, Pageable pageable) {
+        Page<Trade> tradesPage = tradeRepository.findAllByUserId(userId, pageable);
+        return pagedResourcesAssembler.toModel(tradesPage);
     }
 }
