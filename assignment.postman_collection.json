@@ -1,0 +1,99 @@
+{
+	"info": {
+		"_postman_id": "ea05d87e-230c-4607-9837-beeb14771363",
+		"name": "aquariux",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "38001627"
+	},
+	"item": [
+		{
+			"name": "get latest best aggregated price",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8080/getBestAggPrice?symbols=BTCUSDT",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"getBestAggPrice"
+					],
+					"query": [
+						{
+							"key": "symbols",
+							"value": "BTCUSDT"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "buy on latest best aggregated price",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"userId\": 1,\n    \"price\": 15000,\n    \"symbol\": \"ETHUSDT\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8080/trade",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"trade"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get wallet balance",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8080/wallet/1",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"wallet",
+						"1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get trades history",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8080/history/1",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"history",
+						"1"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
